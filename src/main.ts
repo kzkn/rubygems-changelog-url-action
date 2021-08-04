@@ -2,13 +2,14 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as https from 'https'
 import replaceComment from '@aki77/actions-replace-comment'
-import { markdownTable } from 'markdown-table'
-import { Gem, searchChangeLogUrl } from 'rubygems-changelog-url'
+import {markdownTable} from 'markdown-table'
+import {Gem, searchChangeLogUrl} from 'rubygems-changelog-url'
+import {parseDiff} from './diff'
 
 async function listUpdatedRubyGems(): Promise<string[]> {
   const token = core.getInput('githubToken')
   const octokit = github.getOctokit(token)
-  const { data: pullRequest } = await octokit.rest.pulls.get({
+  const {data: pullRequest} = await octokit.rest.pulls.get({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
     pull_number: github.context.issue.number,
@@ -17,29 +18,30 @@ async function listUpdatedRubyGems(): Promise<string[]> {
     }
   })
 
-  console.log('foo', pullRequest)
-
-  return ['csv', 'activerecord']
+  return parseDiff(pullRequest.toString())
 }
 
-function fetchRubyGemsDescription(gemname: string): Promise<Gem | null> {
+async function fetchRubyGemsDescription(gemname: string): Promise<Gem | null> {
   const token = core.getInput('rubygemsToken')
-  return new Promise<Gem | null>((resolve) => {
+  return new Promise<Gem | null>(resolve => {
     const options = {
       hostname: 'rubygems.org',
       port: 443,
-      path: `/gems/${gemname}`,
+      path: `/api/v1/gems/${gemname}.json`,
       method: 'GET',
-      heders: {
-        'Authorization': token,
-        'Content-Type': 'application/json',
+      headers: {
+        Authorization: token,
+        'Content-Type': 'application/json'
       }
     }
-    const req = https.request(options, (res) => {
+    const req = https.request(options, res => {
       if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
-        res.on('data', (data) => {
+        let data = ''
+        res.on('data', chunk => {
+          data += chunk
+        })
+        res.on('end', () => {
           const gem = JSON.parse(data)
-          console.log('bar', gem)
           resolve({
             name: gem['name'],
             projectUri: gem['project_uri'],
@@ -65,7 +67,10 @@ type GemWithChangeLogUrl = {
 function generateReport(changelogs: GemWithChangeLogUrl[]): string {
   return markdownTable([
     ['Gem', 'ChangeLog URL'],
-    ...changelogs.map(({ gem, changeLogUrl }) => [gem.name, changeLogUrl || 'UNKNOWN'])
+    ...changelogs.map(({gem, changeLogUrl}) => [
+      gem.name,
+      changeLogUrl || 'UNKNOWN'
+    ])
   ])
 }
 
@@ -88,10 +93,14 @@ function isNotNull<T>(value: T | null): value is T {
 async function run(): Promise<void> {
   try {
     const updatedRubyGems = await listUpdatedRubyGems()
-    const rubygemsDescs = await Promise.all(updatedRubyGems.map(gem => fetchRubyGemsDescription(gem)))
+    const rubygemsDescs = await Promise.all(
+      updatedRubyGems.map(async gem => fetchRubyGemsDescription(gem))
+    )
     const changelogUrls = await Promise.all(
-      rubygemsDescs.filter(isNotNull)
-        .map(gem => searchChangeLogUrl(gem).then((changeLogUrl) => ({ gem, changeLogUrl })))
+      rubygemsDescs.filter(isNotNull).map(
+        async gem =>
+          searchChangeLogUrl(gem).then(changeLogUrl => ({gem, changeLogUrl})) // eslint-disable-line github/no-then
+      )
     )
 
     const report = generateReport(changelogUrls)
