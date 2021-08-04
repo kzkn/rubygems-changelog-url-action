@@ -4,6 +4,7 @@ import * as https from 'https'
 import replaceComment from '@aki77/actions-replace-comment'
 import { markdownTable } from 'markdown-table'
 import { Gem, searchChangeLogUrl } from 'rubygems-changelog-url'
+import { parseDiff } from './diff'
 
 async function listUpdatedRubyGems(): Promise<string[]> {
   const token = core.getInput('githubToken')
@@ -17,7 +18,7 @@ async function listUpdatedRubyGems(): Promise<string[]> {
     }
   })
 
-  return ['csv', 'activerecord']
+  return parseDiff(pullRequest.toString())
 }
 
 function fetchRubyGemsDescription(gemname: string): Promise<Gem | null> {
