@@ -193,8 +193,12 @@ function run() {
             core.debug('fetch rubygems descriptions from rubygems.org');
             const rubygemsDescs = yield Promise.all(updatedRubyGems.map((gem) => __awaiter(this, void 0, void 0, function* () { return fetchRubyGemsDescription(gem); })));
             core.debug('search rubygems changelog urls');
-            const changelogUrls = yield Promise.all(rubygemsDescs.filter(isNotNull).map((gem) => __awaiter(this, void 0, void 0, function* () { return rubygems_changelog_url_1.searchChangeLogUrl(gem).then(changeLogUrl => ({ gem, changeLogUrl })); }) // eslint-disable-line github/no-then
-            ));
+            const changelogUrls = [];
+            for (const gem of rubygemsDescs.filter(isNotNull)) {
+                core.debug(`search rubygems changelog urls: ${gem.name}`);
+                const url = yield rubygems_changelog_url_1.searchChangeLogUrl(gem).then(changeLogUrl => ({ gem, changeLogUrl })); // eslint-disable-line github/no-then
+                changelogUrls.push(url);
+            }
             core.debug('post report');
             const report = generateReport(changelogUrls);
             yield postComment(report);
