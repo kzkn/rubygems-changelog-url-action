@@ -56,7 +56,6 @@ function listUpdatedRubyGems() {
                 format: 'diff'
             }
         });
-        console.log('foo', pullRequest);
         return ['csv', 'activerecord'];
     });
 }
