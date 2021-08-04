@@ -53,7 +53,7 @@ function listUpdatedRubyGems() {
             repo: github.context.repo.repo,
             pull_number: github.context.issue.number,
             mediaType: {
-                format: 'patch'
+                format: 'diff'
             }
         });
         console.log('foo', pullRequest);
@@ -68,7 +68,7 @@ function fetchRubyGemsDescription(gemname) {
             port: 443,
             path: `/gems/${gemname}`,
             method: 'GET',
-            heders: {
+            headers: {
                 'Authorization': token,
                 'Content-Type': 'application/json',
             }
@@ -80,8 +80,8 @@ function fetchRubyGemsDescription(gemname) {
                     data += chunk;
                 });
                 res.on('end', () => {
+                    console.log('bar', data);
                     const gem = JSON.parse(data);
-                    console.log('bar', gem);
                     resolve({
                         name: gem['name'],
                         projectUri: gem['project_uri'],
