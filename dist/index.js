@@ -69,19 +69,21 @@ function fetchRubyGemsDescription(gemname) {
             path: `/gems/${gemname}`,
             method: 'GET',
             heders: {
-                'Authorization': token
+                'Authorization': token,
+                'Content-Type': 'application/json',
             }
         };
         const req = https.request(options, (res) => {
             if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
                 res.on('data', (data) => {
-                    console.log('bar', data);
+                    const gem = JSON.parse(data);
+                    console.log('bar', gem);
                     resolve({
-                        name: data['name'],
-                        projectUri: data['project_uri'],
-                        homepageUri: data['homepage_uri'],
-                        sourceCodeUri: data['source_code_uri'],
-                        changelogUri: data['changelog_uri']
+                        name: gem['name'],
+                        projectUri: gem['project_uri'],
+                        homepageUri: gem['homepage_uri'],
+                        sourceCodeUri: gem['source_code_uri'],
+                        changelogUri: gem['changelog_uri']
                     });
                 });
             }
