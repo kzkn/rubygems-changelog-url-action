@@ -122,47 +122,51 @@ function listUpdatedRubyGems() {
     });
 }
 function fetchRubyGemsDescription(gemname) {
-    const token = core.getInput('rubygemsToken');
-    return new Promise((resolve) => {
-        const options = {
-            hostname: 'rubygems.org',
-            port: 443,
-            path: `/api/v1/gems/${gemname}.json`,
-            method: 'GET',
-            headers: {
-                'Authorization': token,
-                'Content-Type': 'application/json',
-            }
-        };
-        const req = https.request(options, (res) => {
-            if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
-                let data = '';
-                res.on('data', (chunk) => {
-                    data += chunk;
-                });
-                res.on('end', () => {
-                    console.log('bar', data);
-                    const gem = JSON.parse(data);
-                    resolve({
-                        name: gem['name'],
-                        projectUri: gem['project_uri'],
-                        homepageUri: gem['homepage_uri'],
-                        sourceCodeUri: gem['source_code_uri'],
-                        changelogUri: gem['changelog_uri']
+    return __awaiter(this, void 0, void 0, function* () {
+        const token = core.getInput('rubygemsToken');
+        return new Promise(resolve => {
+            const options = {
+                hostname: 'rubygems.org',
+                port: 443,
+                path: `/api/v1/gems/${gemname}.json`,
+                method: 'GET',
+                headers: {
+                    Authorization: token,
+                    'Content-Type': 'application/json'
+                }
+            };
+            const req = https.request(options, res => {
+                if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+                    let data = '';
+                    res.on('data', chunk => {
+                        data += chunk;
                     });
-                });
-            }
-            else {
-                resolve(null);
-            }
+                    res.on('end', () => {
+                        const gem = JSON.parse(data);
+                        resolve({
+                            name: gem['name'],
+                            projectUri: gem['project_uri'],
+                            homepageUri: gem['homepage_uri'],
+                            sourceCodeUri: gem['source_code_uri'],
+                            changelogUri: gem['changelog_uri']
+                        });
+                    });
+                }
+                else {
+                    resolve(null);
+                }
+            });
+            req.end();
         });
-        req.end();
     });
 }
 function generateReport(changelogs) {
     return markdown_table_1.markdownTable([
         ['Gem', 'ChangeLog URL'],
-        ...changelogs.map(({ gem, changeLogUrl }) => [gem.name, changeLogUrl || 'UNKNOWN'])
+        ...changelogs.map(({ gem, changeLogUrl }) => [
+            gem.name,
+            changeLogUrl || 'UNKNOWN'
+        ])
     ]);
 }
 function postComment(text) {
@@ -185,9 +189,9 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const updatedRubyGems = yield listUpdatedRubyGems();
-            const rubygemsDescs = yield Promise.all(updatedRubyGems.map(gem => fetchRubyGemsDescription(gem)));
-            const changelogUrls = yield Promise.all(rubygemsDescs.filter(isNotNull)
-                .map(gem => rubygems_changelog_url_1.searchChangeLogUrl(gem).then((changeLogUrl) => ({ gem, changeLogUrl }))));
+            const rubygemsDescs = yield Promise.all(updatedRubyGems.map((gem) => __awaiter(this, void 0, void 0, function* () { return fetchRubyGemsDescription(gem); })));
+            const changelogUrls = yield Promise.all(rubygemsDescs.filter(isNotNull).map((gem) => __awaiter(this, void 0, void 0, function* () { return rubygems_changelog_url_1.searchChangeLogUrl(gem).then(changeLogUrl => ({ gem, changeLogUrl })); }) // eslint-disable-line github/no-then
+            ));
             const report = generateReport(changelogUrls);
             yield postComment(report);
         }
