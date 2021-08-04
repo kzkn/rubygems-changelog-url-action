@@ -29,7 +29,7 @@
     "@actions/github": "^5.0.0",
     "@aki77/actions-replace-comment": "^0.5.2",
     "markdown-table": "^3.0.1",
-    "rubygems-changelog-url": "^0.0.3"
+    "rubygems-changelog-url": "^0.0.4"
   },
   "devDependencies": {
     "@types/node": "^16.4.11",

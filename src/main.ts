@@ -104,7 +104,7 @@ async function run(): Promise<void> {
     const changelogUrls: GemWithChangeLogUrl[] = []
     for (const gem of rubygemsDescs.filter(isNotNull)) {
       core.debug(`search rubygems changelog urls: ${gem.name}`)
-      const changeLogUrl = await searchChangeLogUrl(gem)
+      const changeLogUrl = await searchChangeLogUrl(gem, { token: core.getInput('githubToken') })
       core.debug(`search rubygems changelog urls: ${gem.name} => ${changeLogUrl}`)
       changelogUrls.push({gem, changeLogUrl})
     }
