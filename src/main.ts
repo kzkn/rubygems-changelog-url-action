@@ -13,7 +13,7 @@ async function listUpdatedRubyGems(): Promise<string[]> {
     repo: github.context.repo.repo,
     pull_number: github.context.issue.number,
     mediaType: {
-      format: 'diff'
+      format: 'patch'
     }
   })
 
