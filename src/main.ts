@@ -26,7 +26,7 @@ function fetchRubyGemsDescription(gemname: string): Promise<Gem | null> {
     const options = {
       hostname: 'rubygems.org',
       port: 443,
-      path: `/gems/${gemname}`,
+      path: `/api/v1/gems/${gemname}.json`,
       method: 'GET',
       headers: {
         'Authorization': token,
