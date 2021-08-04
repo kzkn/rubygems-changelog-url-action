@@ -101,12 +101,12 @@ async function run(): Promise<void> {
     )
 
     core.debug('search rubygems changelog urls')
-    const changelogUrls = await Promise.all(
-      rubygemsDescs.filter(isNotNull).map(
-        async gem =>
-          searchChangeLogUrl(gem).then(changeLogUrl => ({gem, changeLogUrl})) // eslint-disable-line github/no-then
-      )
-    )
+    const changelogUrls: GemWithChangeLogUrl[] = []
+    for (const gem of rubygemsDescs.filter(isNotNull)) {
+      core.debug(`search rubygems changelog urls: ${gem.name}`)
+      const url = await searchChangeLogUrl(gem).then(changeLogUrl => ({gem, changeLogUrl})) // eslint-disable-line github/no-then
+      changelogUrls.push(url)
+    }
 
     core.debug('post report')
     const report = generateReport(changelogUrls)
