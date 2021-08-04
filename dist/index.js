@@ -196,7 +196,7 @@ function run() {
             const changelogUrls = [];
             for (const gem of rubygemsDescs.filter(isNotNull)) {
                 core.debug(`search rubygems changelog urls: ${gem.name}`);
-                const changeLogUrl = yield rubygems_changelog_url_1.searchChangeLogUrl(gem);
+                const changeLogUrl = yield rubygems_changelog_url_1.searchChangeLogUrl(gem, { token: core.getInput('githubToken') });
                 core.debug(`search rubygems changelog urls: ${gem.name} => ${changeLogUrl}`);
                 changelogUrls.push({ gem, changeLogUrl });
             }
@@ -6388,6 +6388,89 @@ function onceStrict (fn) {
 
 /***/ }),
 
+/***/ 4901:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getContentUrl = void 0;
+const https = __importStar(__nccwpck_require__(7211));
+function callApi(path, option) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise((resolve, reject) => {
+            const headers = {};
+            headers['User-Agent'] = 'rubygems-changelog-url';
+            headers['Accept'] = 'application/vnd.github.v3+json';
+            if (option === null || option === void 0 ? void 0 : option.token) {
+                headers['Authorization'] = `token ${option.token}`;
+            }
+            const opts = {
+                hostname: 'api.github.com',
+                port: 443,
+                method: 'GET',
+                path,
+                headers,
+            };
+            const req = https.request(opts, res => {
+                const { statusCode } = res;
+                if (statusCode && statusCode >= 200 && statusCode < 300) {
+                    let data = '';
+                    res.on('data', chunk => {
+                        data += chunk;
+                    });
+                    res.on('end', () => {
+                        resolve(data);
+                    });
+                }
+                else {
+                    reject(res);
+                }
+            });
+            req.end();
+        });
+    });
+}
+function getContentUrl(repo, path, option) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const data = yield callApi(`/repos/${repo.owner}/${repo.name}/contents/${path}`, option);
+        const obj = JSON.parse(data);
+        return obj['html_url'];
+    });
+}
+exports.getContentUrl = getContentUrl;
+
+
+/***/ }),
+
 /***/ 4283:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -6421,32 +6504,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __asyncValues = (this && this.__asyncValues) || function (o) {
-    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
-    var m = o[Symbol.asyncIterator], i;
-    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
-    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
-    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
-};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.searchChangeLogUrl = void 0;
-const https = __importStar(__nccwpck_require__(7211));
-function isValidUrl(url) {
-    return new Promise((resolve) => {
-        const req = https.request(new URL(url), res => {
-            const ok = res.statusCode && res.statusCode >= 200 && res.statusCode < 300;
-            resolve(ok ? url : null);
-        });
-        req.end();
-    });
-}
+const github = __importStar(__nccwpck_require__(4901));
+const GITHUB_REPOSITORY_URL_REGEXP = new RegExp('^https://github.com/([^/]+)/([^/]+)/?$');
+const GITHUB_TREE_URL_REGEXP = new RegExp('^https://github.com/([^/]+)/([^/]+)/tree/[^/]+/(.+)$');
 function isGithubRepositoryUrl(url) {
-    const regexp = new RegExp('^https://github.com/[^/]+/[^/]+/?$');
-    return !!url.match(regexp);
+    return !!url.match(GITHUB_REPOSITORY_URL_REGEXP);
 }
 function isGithubTreeUrl(url) {
-    const regexp = new RegExp('^https://github.com/[^/]+/[^/]+/tree/.+$');
-    return !!url.match(regexp);
+    return !!url.match(GITHUB_TREE_URL_REGEXP);
 }
 function findUrlBy(gem, finder) {
     const { projectUri, homepageUri, sourceCodeUri } = gem;
@@ -6482,7 +6549,7 @@ const FILENAMES = {
     ['History.txt']: 3,
     ['history.txt']: 3,
     ['HISTORY.rdoc']: 4,
-    ['History.rdoc']: 3,
+    ['History.rdoc']: 2,
     ['history.rdoc']: 4,
     ['HISTORY']: 3,
     ['History']: 3,
@@ -6501,60 +6568,48 @@ const FILENAMES = {
     ['news']: 3,
 };
 const SORTED_FILENAMES = Array.from(Object.entries(FILENAMES)).sort((a, b) => a[1] - b[1]).map(e => e[0]);
-function tryGithubBlobChangeLog(baseUrls) {
-    var e_1, _a;
+function tryGithubBlobChangeLog(repo, pathPrefix, option) {
     return __awaiter(this, void 0, void 0, function* () {
-        const urls = [];
-        for (const baseUrl of baseUrls) {
-            for (const filename of SORTED_FILENAMES) {
-                urls.push(`${baseUrl}/${filename}`);
+        const paths = SORTED_FILENAMES.map(fn => `${pathPrefix ? pathPrefix + '/' : ''}${fn}`);
+        // NOTE: Deliberately looping to reduce the number of useless HTTP requests
+        for (const path of paths) {
+            try {
+                return yield github.getContentUrl(repo, path, option);
             }
-        }
-        try {
-            // NOTE: Deliberately looping to reduce the number of useless HTTP requests
-            for (var _b = __asyncValues(urls.map(url => isValidUrl(url))), _c; _c = yield _b.next(), !_c.done;) {
-                const result = _c.value;
-                if (result) {
-                    return result;
+            catch (e) {
+                if (!e.statusCode || e.statusCode >= 500) {
+                    throw e;
                 }
             }
-        }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
-        finally {
-            try {
-                if (_c && !_c.done && (_a = _b.return)) yield _a.call(_b);
-            }
-            finally { if (e_1) throw e_1.error; }
         }
         return null;
     });
 }
-function tryGithubBlobChangeLogFromRepositoryRoot(githubRepositoryUrl) {
-    const branches = ['master', 'main'];
-    const baseUrls = branches.map(branch => `${githubRepositoryUrl}/blob/${branch}`);
-    return tryGithubBlobChangeLog(baseUrls);
+function tryGithubBlobChangeLogFromRepositoryRoot(githubRepositoryUrl, option) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const [, owner, repoName] = githubRepositoryUrl.match(GITHUB_REPOSITORY_URL_REGEXP);
+        return tryGithubBlobChangeLog({ owner, name: repoName }, null, option);
+    });
 }
-function tryGithubBlobChangeLogFromRepositoryTree(githubTreeUrl) {
-    const baseUrl = githubTreeUrl.replace('/tree/', '/blob/');
-    return tryGithubBlobChangeLog([baseUrl]);
+function tryGithubBlobChangeLogFromRepositoryTree(githubTreeUrl, option) {
+    const [, owner, repoName, pathPrefix] = githubTreeUrl.match(GITHUB_TREE_URL_REGEXP);
+    return tryGithubBlobChangeLog({ owner, name: repoName }, pathPrefix, option);
 }
-function searchChangeLogUrl(gem) {
+function searchChangeLogUrl(gem, option) {
     return __awaiter(this, void 0, void 0, function* () {
         if (gem.changelogUri) {
-            if (yield isValidUrl(gem.changelogUri)) {
-                return gem.changelogUri;
-            }
+            return gem.changelogUri;
         }
         const repositoryUrl = githubRepositoryUrl(gem);
         if (repositoryUrl) {
-            const url = yield tryGithubBlobChangeLogFromRepositoryRoot(repositoryUrl);
+            const url = yield tryGithubBlobChangeLogFromRepositoryRoot(repositoryUrl, option);
             if (url) {
                 return url;
             }
         }
         const treeUrl = githubTreeUrl(gem);
         if (treeUrl) {
-            const url = yield tryGithubBlobChangeLogFromRepositoryTree(treeUrl);
+            const url = yield tryGithubBlobChangeLogFromRepositoryTree(treeUrl, option);
             if (url) {
                 return url;
             }
