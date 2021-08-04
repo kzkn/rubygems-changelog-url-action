@@ -92,10 +92,15 @@ function isNotNull<T>(value: T | null): value is T {
 
 async function run(): Promise<void> {
   try {
+    core.debug('listing rubygems')
     const updatedRubyGems = await listUpdatedRubyGems()
+
+    core.debug('fetch rubygems descriptions from rubygems.org')
     const rubygemsDescs = await Promise.all(
       updatedRubyGems.map(async gem => fetchRubyGemsDescription(gem))
     )
+
+    core.debug('search rubygems changelog urls')
     const changelogUrls = await Promise.all(
       rubygemsDescs.filter(isNotNull).map(
         async gem =>
@@ -103,6 +108,7 @@ async function run(): Promise<void> {
       )
     )
 
+    core.debug('post report')
     const report = generateReport(changelogUrls)
     await postComment(report)
   } catch (error) {
