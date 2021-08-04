@@ -17,8 +17,6 @@ async function listUpdatedRubyGems(): Promise<string[]> {
     }
   })
 
-  console.log('foo', pullRequest)
-
   return ['csv', 'activerecord']
 }
 
