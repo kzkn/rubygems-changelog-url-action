@@ -53,7 +53,7 @@ function listUpdatedRubyGems() {
             repo: github.context.repo.repo,
             pull_number: github.context.issue.number,
             mediaType: {
-                format: 'diff'
+                format: 'patch'
             }
         });
         console.log('foo', pullRequest);
@@ -75,7 +75,11 @@ function fetchRubyGemsDescription(gemname) {
         };
         const req = https.request(options, (res) => {
             if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
-                res.on('data', (data) => {
+                let data = '';
+                res.on('data', (chunk) => {
+                    data += chunk;
+                });
+                res.on('end', () => {
                     const gem = JSON.parse(data);
                     console.log('bar', gem);
                     resolve({
