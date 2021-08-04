@@ -21,7 +21,7 @@ async function listUpdatedRubyGems(): Promise<string[]> {
   return parseDiff(pullRequest.toString())
 }
 
-function fetchRubyGemsDescription(gemname: string): Promise<Gem | null> {
+async function fetchRubyGemsDescription(gemname: string): Promise<Gem | null> {
   const token = core.getInput('rubygemsToken')
   return new Promise<Gem | null>(resolve => {
     const options = {
@@ -41,7 +41,6 @@ function fetchRubyGemsDescription(gemname: string): Promise<Gem | null> {
           data += chunk
         })
         res.on('end', () => {
-          console.log('bar', data)
           const gem = JSON.parse(data)
           resolve({
             name: gem['name'],
@@ -95,14 +94,13 @@ async function run(): Promise<void> {
   try {
     const updatedRubyGems = await listUpdatedRubyGems()
     const rubygemsDescs = await Promise.all(
-      updatedRubyGems.map(gem => fetchRubyGemsDescription(gem))
+      updatedRubyGems.map(async gem => fetchRubyGemsDescription(gem))
     )
     const changelogUrls = await Promise.all(
-      rubygemsDescs
-        .filter(isNotNull)
-        .map(gem =>
-          searchChangeLogUrl(gem).then(changeLogUrl => ({gem, changeLogUrl}))
-        )
+      rubygemsDescs.filter(isNotNull).map(
+        async gem =>
+          searchChangeLogUrl(gem).then(changeLogUrl => ({gem, changeLogUrl})) // eslint-disable-line github/no-then
+      )
     )
 
     const report = generateReport(changelogUrls)
