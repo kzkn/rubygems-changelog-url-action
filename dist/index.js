@@ -188,10 +188,14 @@ function isNotNull(value) {
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
+            core.debug('listing rubygems');
             const updatedRubyGems = yield listUpdatedRubyGems();
+            core.debug('fetch rubygems descriptions from rubygems.org');
             const rubygemsDescs = yield Promise.all(updatedRubyGems.map((gem) => __awaiter(this, void 0, void 0, function* () { return fetchRubyGemsDescription(gem); })));
+            core.debug('search rubygems changelog urls');
             const changelogUrls = yield Promise.all(rubygemsDescs.filter(isNotNull).map((gem) => __awaiter(this, void 0, void 0, function* () { return rubygems_changelog_url_1.searchChangeLogUrl(gem).then(changeLogUrl => ({ gem, changeLogUrl })); }) // eslint-disable-line github/no-then
             ));
+            core.debug('post report');
             const report = generateReport(changelogUrls);
             yield postComment(report);
         }
