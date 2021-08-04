@@ -32,7 +32,7 @@
     "rubygems-changelog-url": "^0.0.3"
   },
   "devDependencies": {
-    "@types/node": "^16.3.3",
+    "@types/node": "^16.4.11",
     "@typescript-eslint/parser": "^4.28.3",
     "@vercel/ncc": "^0.29.0",
     "eslint": "^7.31.0",
