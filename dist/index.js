@@ -165,7 +165,7 @@ function generateReport(changelogs) {
         ['Gem', 'ChangeLog URL'],
         ...changelogs.map(({ gem, changeLogUrl }) => [
             gem.name,
-            changeLogUrl || 'UNKNOWN'
+            changeLogUrl || `https://rubygems.org/gems/${gem.name}`
         ])
     ]);
 }
