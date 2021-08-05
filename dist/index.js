@@ -194,7 +194,22 @@ function saveCache(changelogs) {
         const hash = changelogs.reduce((obj, { gem, changeLogUrl }) => (Object.assign(Object.assign({}, obj), { [gem.name]: changeLogUrl })), {});
         const content = JSON.stringify(hash);
         fs.writeFileSync('changelogs.json', content);
-        yield cache.saveCache(['changelogs.json'], `changelogs-${github.context.issue.number}`);
+        const paths = ['changelogs.json'];
+        const key = `changelogs-${github.context.issue.number}`;
+        try {
+            yield cache.saveCache(paths, key);
+        }
+        catch (error) {
+            if (error.name === cache.ValidationError.name) {
+                throw error;
+            }
+            else if (error.name === cache.ReserveCacheError.name) {
+                core.info(error.message);
+            }
+            else {
+                core.info(`[warning]${error.message}`);
+            }
+        }
     });
 }
 function generateReport(changelogs) {
