@@ -175,10 +175,10 @@ let restoredCache;
 function findChangeLogUrlFromCache(gem) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!restoredCache) {
-            const hit = yield cache.restoreCache(['changelogs_cache.json'], `changelogs-${github.context.issue.number}`);
+            const hit = yield cache.restoreCache(['changelogs.json'], `changelogs-${github.context.issue.number}`, ['changelogs-']);
             if (hit) {
                 core.debug(`cache hit: ${hit}`);
-                const content = fs.readFileSync('changelogs_cache.json');
+                const content = fs.readFileSync('changelogs.json');
                 restoredCache = JSON.parse(content.toString());
             }
             else {
@@ -194,7 +194,22 @@ function saveCache(changelogs) {
         const hash = changelogs.reduce((obj, { gem, changeLogUrl }) => (Object.assign(Object.assign({}, obj), { [gem.name]: changeLogUrl })), {});
         const content = JSON.stringify(hash);
         fs.writeFileSync('changelogs.json', content);
-        yield cache.saveCache(['changelogs.json'], `changelogs-${github.context.issue.number}`);
+        const paths = ['changelogs.json'];
+        const key = `changelogs-${github.context.issue.number}`;
+        try {
+            yield cache.saveCache(paths, key);
+        }
+        catch (error) {
+            if (error.name === cache.ValidationError.name) {
+                throw error;
+            }
+            else if (error.name === cache.ReserveCacheError.name) {
+                core.info(error.message);
+            }
+            else {
+                core.info(`[warning]${error.message}`);
+            }
+        }
     });
 }
 function generateReport(changelogs) {
