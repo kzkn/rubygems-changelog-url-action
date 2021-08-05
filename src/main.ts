@@ -8,7 +8,9 @@ import {parseDiff} from './diff'
 
 async function listUpdatedRubyGems(): Promise<string[]> {
   const token = core.getInput('githubToken')
+  core.debug(`github token: ${token}`)
   const octokit = github.getOctokit(token)
+  console.log('rate limit', await octokit.request('GET /rate_limit'))
   const {data: pullRequest} = await octokit.rest.pulls.get({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
@@ -23,6 +25,7 @@ async function listUpdatedRubyGems(): Promise<string[]> {
 
 async function fetchRubyGemsDescription(gemname: string): Promise<Gem | null> {
   const token = core.getInput('rubygemsToken')
+  core.debug(`rubygems token: ${token}`)
   return new Promise<Gem | null>(resolve => {
     const options = {
       hostname: 'rubygems.org',
