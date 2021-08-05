@@ -67,8 +67,27 @@ type GemWithChangeLogUrl = {
 }
 
 async function rubyGemsChangeLogUrl(gem: Gem, option?: { token: string }): Promise<GemWithChangeLogUrl> {
-  const changeLogUrl = await searchChangeLogUrl(gem, option)
+  let changeLogUrl = await findChangeLogUrlFromCache(gem)
+  if (!changeLogUrl) {
+    changeLogUrl = await searchChangeLogUrl(gem, option)
+  }
   return { gem, changeLogUrl }
+}
+
+let restoredCache: { [key: string]: string | null }
+async function findChangeLogUrlFromCache(gem: Gem): Promise<string | null> {
+  if (!restoredCache) {
+    const hit = await cache.restoreCache(['changelogs_cache.json'], `changelogs-${github.context.issue.number}`)
+    if (hit) {
+      core.debug(`cache hit: ${hit}`)
+      const content = fs.readFileSync('changelogs_cache.json')
+      restoredCache = JSON.parse(content.toString())
+    } else {
+      core.debug(`no cache`)
+      restoredCache = {}
+    }
+  }
+  return restoredCache[gem.name]
 }
 
 async function saveCache(changelogs: GemWithChangeLogUrl[]): Promise<void> {
