@@ -77,10 +77,10 @@ async function rubyGemsChangeLogUrl(gem: Gem, option?: { token: string }): Promi
 let restoredCache: { [key: string]: string | null }
 async function findChangeLogUrlFromCache(gem: Gem): Promise<string | null> {
   if (!restoredCache) {
-    const hit = await cache.restoreCache(['changelogs_cache.json'], `changelogs-${github.context.issue.number}`, ['changelogs-'])
+    const hit = await cache.restoreCache(['changelogs.json'], `changelogs-${github.context.issue.number}`, ['changelogs-'])
     if (hit) {
       core.debug(`cache hit: ${hit}`)
-      const content = fs.readFileSync('changelogs_cache.json')
+      const content = fs.readFileSync('changelogs.json')
       restoredCache = JSON.parse(content.toString())
     } else {
       core.debug(`no cache`)
