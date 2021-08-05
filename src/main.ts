@@ -8,9 +8,7 @@ import {parseDiff} from './diff'
 
 async function listUpdatedRubyGems(): Promise<string[]> {
   const token = core.getInput('githubToken')
-  core.debug(`github token: ${token}`)
   const octokit = github.getOctokit(token)
-  console.log('rate limit', await octokit.request('GET /rate_limit'))
   const {data: pullRequest} = await octokit.rest.pulls.get({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
@@ -25,7 +23,6 @@ async function listUpdatedRubyGems(): Promise<string[]> {
 
 async function fetchRubyGemsDescription(gemname: string): Promise<Gem | null> {
   const token = core.getInput('rubygemsToken')
-  core.debug(`rubygems token: ${token}`)
   return new Promise<Gem | null>(resolve => {
     const options = {
       hostname: 'rubygems.org',
@@ -97,17 +94,24 @@ async function run(): Promise<void> {
   try {
     core.debug('listing rubygems')
     const updatedRubyGems = await listUpdatedRubyGems()
+    if (updatedRubyGems.length === 0) {
+      return
+    }
 
     core.debug('fetch rubygems descriptions from rubygems.org')
     const rubygemsDescs = await Promise.all(
       updatedRubyGems.map(async gem => await fetchRubyGemsDescription(gem))
     )
+    if (rubygemsDescs.length === 0) {
+      return
+    }
 
     core.debug('search rubygems changelog urls')
     const changelogUrls: GemWithChangeLogUrl[] = []
     for (const gem of rubygemsDescs.filter(isNotNull)) {
       core.debug(`search rubygems changelog urls: ${gem.name}`)
       const changeLogUrl = await searchChangeLogUrl(gem, { token: core.getInput('githubToken') })
+      // TODO: cache
       core.debug(`search rubygems changelog urls: ${gem.name} => ${changeLogUrl}`)
       changelogUrls.push({gem, changeLogUrl})
     }
