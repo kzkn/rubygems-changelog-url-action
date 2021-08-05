@@ -97,14 +97,14 @@ async function run(): Promise<void> {
 
     core.debug('fetch rubygems descriptions from rubygems.org')
     const rubygemsDescs = await Promise.all(
-      updatedRubyGems.map(async gem => fetchRubyGemsDescription(gem))
+      updatedRubyGems.map(async gem => await fetchRubyGemsDescription(gem))
     )
 
     core.debug('search rubygems changelog urls')
     const changelogUrls = await Promise.all(
       rubygemsDescs.filter(isNotNull).map(
         async gem =>
-          searchChangeLogUrl(gem, {
+          await searchChangeLogUrl(gem, {
             token: core.getInput('githubToken')
           }).then(url => ({gem, changeLogUrl: url})) // eslint-disable-line github/no-then
       )
