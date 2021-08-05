@@ -164,8 +164,8 @@ function fetchRubyGemsDescription(gemname) {
 }
 function rubyGemsChangeLogUrl(gem, option) {
     return __awaiter(this, void 0, void 0, function* () {
-        let changeLogUrl = yield findChangeLogUrlFromCache(gem);
-        if (!changeLogUrl) {
+        let [found, changeLogUrl] = yield findChangeLogUrlFromCache(gem);
+        if (!found) {
             changeLogUrl = yield rubygems_changelog_url_1.searchChangeLogUrl(gem, option);
         }
         return { gem, changeLogUrl };
@@ -176,17 +176,25 @@ function findChangeLogUrlFromCache(gem) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!restoredCache) {
             const hit = yield cache.restoreCache(['changelogs.json'], `changelogs-${github.context.issue.number}`, ['changelogs-']);
+            restoredCache = new Map();
             if (hit) {
                 core.debug(`cache hit: ${hit}`);
                 const content = fs.readFileSync('changelogs.json');
-                restoredCache = JSON.parse(content.toString());
+                const cachedChangelogs = JSON.parse(content.toString());
+                for (const [k, v] of Object.entries(cachedChangelogs)) {
+                    restoredCache.set(k, v);
+                }
             }
             else {
-                core.debug(`no cache`);
-                restoredCache = {};
+                core.debug('no cache');
             }
         }
-        return restoredCache[gem.name];
+        if (restoredCache.has(gem.name)) {
+            return [true, restoredCache.get(gem.name) || null];
+        }
+        else {
+            return [false, null];
+        }
     });
 }
 function saveCache(changelogs) {
