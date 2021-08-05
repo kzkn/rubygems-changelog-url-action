@@ -95,7 +95,20 @@ async function saveCache(changelogs: GemWithChangeLogUrl[]): Promise<void> {
     changelogs.reduce((obj, { gem, changeLogUrl }) => ({ ...obj, [gem.name]: changeLogUrl }), {})
   const content = JSON.stringify(hash)
   fs.writeFileSync('changelogs.json', content)
-  await cache.saveCache(['changelogs.json'], `changelogs-${github.context.issue.number}`)
+
+  const paths = ['changelogs.json']
+  const key = `changelogs-${github.context.issue.number}`
+  try {
+    await cache.saveCache(paths, key)
+  } catch (error) {
+    if (error.name === cache.ValidationError.name) {
+      throw error
+    } else if (error.name === cache.ReserveCacheError.name) {
+      core.info(error.message)
+    } else {
+      core.info(`[warning]${error.message}`)
+    }
+  }
 }
 
 function generateReport(changelogs: GemWithChangeLogUrl[]): string {
