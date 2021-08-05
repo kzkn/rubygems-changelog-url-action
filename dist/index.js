@@ -112,6 +112,10 @@ function listUpdatedRubyGems() {
     return __awaiter(this, void 0, void 0, function* () {
         const token = core.getInput('githubToken');
         const octokit = github.getOctokit(token);
+        if (core.isDebug()) {
+            const rateLimit = yield octokit.request('GET /rate_limit');
+            console.log('rate limit', rateLimit);
+        }
         const { data: pullRequest } = yield octokit.rest.pulls.get({
             owner: github.context.repo.owner,
             repo: github.context.repo.repo,
