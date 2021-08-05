@@ -67,27 +67,35 @@ type GemWithChangeLogUrl = {
 }
 
 async function rubyGemsChangeLogUrl(gem: Gem, option?: { token: string }): Promise<GemWithChangeLogUrl> {
-  let changeLogUrl = await findChangeLogUrlFromCache(gem)
-  if (!changeLogUrl) {
+  let [found, changeLogUrl] = await findChangeLogUrlFromCache(gem)
+  if (!found) {
     changeLogUrl = await searchChangeLogUrl(gem, option)
   }
   return { gem, changeLogUrl }
 }
 
-let restoredCache: { [key: string]: string | null }
-async function findChangeLogUrlFromCache(gem: Gem): Promise<string | null> {
+let restoredCache: Map<string, string | null>
+async function findChangeLogUrlFromCache(gem: Gem): Promise<[boolean, string | null]> {
   if (!restoredCache) {
     const hit = await cache.restoreCache(['changelogs.json'], `changelogs-${github.context.issue.number}`, ['changelogs-'])
+    restoredCache = new Map()
     if (hit) {
       core.debug(`cache hit: ${hit}`)
       const content = fs.readFileSync('changelogs.json')
-      restoredCache = JSON.parse(content.toString())
+      const cachedChangelogs = JSON.parse(content.toString()) as { [key: string]: string | null }
+      for (const [k, v] of Object.entries(cachedChangelogs)) {
+        restoredCache.set(k, v)
+      }
     } else {
-      core.debug(`no cache`)
-      restoredCache = {}
+      core.debug('no cache')
     }
   }
-  return restoredCache[gem.name]
+
+  if (restoredCache.has(gem.name)) {
+    return [true, restoredCache.get(gem.name) || null]
+  } else {
+    return [false, null]
+  }
 }
 
 async function saveCache(changelogs: GemWithChangeLogUrl[]): Promise<void> {
