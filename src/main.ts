@@ -11,6 +11,12 @@ import {parseDiff} from './diff'
 async function listUpdatedRubyGems(): Promise<string[]> {
   const token = core.getInput('githubToken')
   const octokit = github.getOctokit(token)
+
+  if (core.isDebug()) {
+    const rateLimit = await octokit.request('GET /rate_limit')
+    console.log('rate limit', rateLimit)
+  }
+
   const {data: pullRequest} = await octokit.rest.pulls.get({
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
