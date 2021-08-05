@@ -175,7 +175,7 @@ let restoredCache;
 function findChangeLogUrlFromCache(gem) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!restoredCache) {
-            const hit = yield cache.restoreCache(['changelogs_cache.json'], `changelogs-${github.context.issue.number}`);
+            const hit = yield cache.restoreCache(['changelogs_cache.json'], `changelogs-${github.context.issue.number}`, ['changelogs-']);
             if (hit) {
                 core.debug(`cache hit: ${hit}`);
                 const content = fs.readFileSync('changelogs_cache.json');
