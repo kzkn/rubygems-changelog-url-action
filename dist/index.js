@@ -191,10 +191,10 @@ function run() {
             core.debug('listing rubygems');
             const updatedRubyGems = yield listUpdatedRubyGems();
             core.debug('fetch rubygems descriptions from rubygems.org');
-            const rubygemsDescs = yield Promise.all(updatedRubyGems.map((gem) => __awaiter(this, void 0, void 0, function* () { return fetchRubyGemsDescription(gem); })));
+            const rubygemsDescs = yield Promise.all(updatedRubyGems.map((gem) => __awaiter(this, void 0, void 0, function* () { return yield fetchRubyGemsDescription(gem); })));
             core.debug('search rubygems changelog urls');
             const changelogUrls = yield Promise.all(rubygemsDescs.filter(isNotNull).map((gem) => __awaiter(this, void 0, void 0, function* () {
-                return rubygems_changelog_url_1.searchChangeLogUrl(gem, {
+                return yield rubygems_changelog_url_1.searchChangeLogUrl(gem, {
                     token: core.getInput('githubToken')
                 }).then(url => ({ gem, changeLogUrl: url }));
             }) // eslint-disable-line github/no-then
