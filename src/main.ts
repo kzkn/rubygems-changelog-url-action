@@ -1,6 +1,8 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
+import * as cache from '@actions/cache'
 import * as https from 'https'
+import * as fs from 'fs'
 import replaceComment from '@aki77/actions-replace-comment'
 import {markdownTable} from 'markdown-table'
 import {Gem, searchChangeLogUrl} from 'rubygems-changelog-url'
@@ -64,6 +66,19 @@ type GemWithChangeLogUrl = {
   changeLogUrl: string | null
 }
 
+async function rubyGemsChangeLogUrl(gem: Gem, option?: { token: string }): Promise<GemWithChangeLogUrl> {
+  const changeLogUrl = await searchChangeLogUrl(gem, option)
+  return { gem, changeLogUrl }
+}
+
+async function saveCache(changelogs: GemWithChangeLogUrl[]): Promise<void> {
+  const hash: { [key: string]: string | null } =
+    changelogs.reduce((obj, { gem, changeLogUrl }) => ({ ...obj, [gem.name]: changeLogUrl }), {})
+  const content = JSON.stringify(hash)
+  fs.writeFileSync('changelogs.json', content)
+  await cache.saveCache(['changelogs.json'], `changelogs-${github.context.issue.number}`)
+}
+
 function generateReport(changelogs: GemWithChangeLogUrl[]): string {
   return markdownTable([
     ['Gem', 'ChangeLog URL'],
@@ -110,11 +125,12 @@ async function run(): Promise<void> {
     const changelogUrls: GemWithChangeLogUrl[] = []
     for (const gem of rubygemsDescs.filter(isNotNull)) {
       core.debug(`search rubygems changelog urls: ${gem.name}`)
-      const changeLogUrl = await searchChangeLogUrl(gem, { token: core.getInput('githubToken') })
-      // TODO: cache
-      core.debug(`search rubygems changelog urls: ${gem.name} => ${changeLogUrl}`)
-      changelogUrls.push({gem, changeLogUrl})
+      const url = await rubyGemsChangeLogUrl(gem, { token: core.getInput('githubToken') })
+      core.debug(`search rubygems changelog urls: ${gem.name} => ${url.changeLogUrl}`)
+      changelogUrls.push(url)
     }
+
+    await saveCache(changelogUrls)
 
     core.debug('post report')
     const report = generateReport(changelogUrls)
