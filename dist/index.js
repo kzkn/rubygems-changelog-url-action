@@ -175,10 +175,10 @@ let restoredCache;
 function findChangeLogUrlFromCache(gem) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!restoredCache) {
-            const hit = yield cache.restoreCache(['changelogs_cache.json'], `changelogs-${github.context.issue.number}`, ['changelogs-']);
+            const hit = yield cache.restoreCache(['changelogs.json'], `changelogs-${github.context.issue.number}`, ['changelogs-']);
             if (hit) {
                 core.debug(`cache hit: ${hit}`);
-                const content = fs.readFileSync('changelogs_cache.json');
+                const content = fs.readFileSync('changelogs.json');
                 restoredCache = JSON.parse(content.toString());
             }
             else {
