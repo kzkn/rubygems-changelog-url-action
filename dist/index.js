@@ -109,7 +109,9 @@ const diff_1 = __nccwpck_require__(2484);
 function listUpdatedRubyGems() {
     return __awaiter(this, void 0, void 0, function* () {
         const token = core.getInput('githubToken');
+        core.debug(`github token: ${token}`);
         const octokit = github.getOctokit(token);
+        console.log('rate limit', yield octokit.request('GET /rate_limit'));
         const { data: pullRequest } = yield octokit.rest.pulls.get({
             owner: github.context.repo.owner,
             repo: github.context.repo.repo,
@@ -124,6 +126,7 @@ function listUpdatedRubyGems() {
 function fetchRubyGemsDescription(gemname) {
     return __awaiter(this, void 0, void 0, function* () {
         const token = core.getInput('rubygemsToken');
+        core.debug(`rubygems token: ${token}`);
         return new Promise(resolve => {
             const options = {
                 hostname: 'rubygems.org',
