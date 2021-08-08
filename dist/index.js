@@ -7,7 +7,8 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.parseDiff = exports.extractAddedRubyGemsNames = exports.extractGemfileLockDiffLines = void 0;
+exports.parseDiff = exports.extractChangedRubyGemsNames = exports.extractGemfileLockDiffLines = void 0;
+// type RubyGemsName = string
 function isGemfileLockDiffStart(line) {
     return !!line.match(/^diff --git a\/.*Gemfile.lock$/);
 }
@@ -17,10 +18,13 @@ function isDiffStart(line) {
 function isDiff(line) {
     return !!line.match(/^[-+][^-+]/);
 }
-function extractRubyGemsName(line) {
-    const match = line.match(/^[+] +([^ ]+) \(.*$/);
-    return match ? match[1] : undefined;
-}
+// function extractRubyGemsNameAndVersion(line: string, prefix: string): RubyGemsNameAndVersion | null {
+//   const regexp = new RegExp(`^[${prefix}] {4}([^ ]+) \\((.+)\\).*$`)
+//   const match = line.match(regexp)
+//   if (!match) { return null }
+//   const [, name, version] = match
+//   return { name, version }
+// }
 function extractGemfileLockDiffLines(diff) {
     const diffs = [];
     let lines = [];
@@ -44,18 +48,50 @@ function extractGemfileLockDiffLines(diff) {
     return diffs;
 }
 exports.extractGemfileLockDiffLines = extractGemfileLockDiffLines;
-function extractAddedRubyGemsNames(lines) {
-    return lines.map(extractRubyGemsName).filter(name => !!name);
+function extractChangedRubyGemsNames(lines) {
+    const regexp = new RegExp(`^[-+] {4}([^ ]+) \\((.+)\\).*$`);
+    const diffs = lines.map((line) => {
+        const match = line.match(regexp);
+        if (!match) {
+            return null;
+        }
+        const [, name, version] = match;
+        const added = line[0] === '+';
+        return { name, added, version };
+    });
+    return diffs.filter(diff => !!diff);
 }
-exports.extractAddedRubyGemsNames = extractAddedRubyGemsNames;
+exports.extractChangedRubyGemsNames = extractChangedRubyGemsNames;
 function parseDiff(diff) {
-    const names = new Set();
+    var _a;
+    const diffs = [];
     for (const lines of extractGemfileLockDiffLines(diff)) {
-        for (const name of extractAddedRubyGemsNames(lines)) {
-            names.add(name);
+        for (const gem of extractChangedRubyGemsNames(lines)) {
+            diffs.push(gem);
         }
     }
-    return Array.from(names);
+    const changes = new Map();
+    for (const gem of diffs) {
+        let change = changes.get(gem.name) || {};
+        if (gem.added) {
+            change.add = gem;
+        }
+        else {
+            change.remove = gem;
+        }
+        changes.set(gem.name, change);
+    }
+    const gems = [];
+    for (const [name, change] of changes.entries()) {
+        if (!change.add)
+            continue;
+        gems.push({
+            name: name,
+            oldVersion: (_a = change.remove) === null || _a === void 0 ? void 0 : _a.version,
+            newVersion: change.add.version
+        });
+    }
+    return gems;
 }
 exports.parseDiff = parseDiff;
 
@@ -224,13 +260,18 @@ function saveCache(changelogs) {
         }
     });
 }
-function generateReport(changelogs) {
+function generateReport(changelogs, versions) {
     return markdown_table_1.markdownTable([
-        ['Gem', 'ChangeLog URL'],
-        ...changelogs.map(({ gem, changeLogUrl }) => [
-            gem.name,
-            changeLogUrl || `https://rubygems.org/gems/${gem.name}`
-        ])
+        ['Gem', 'Before', 'After', 'ChangeLog URL'],
+        ...changelogs.map(({ gem, changeLogUrl }) => {
+            var _a, _b;
+            return [
+                gem.name,
+                ((_a = versions.get(gem.name)) === null || _a === void 0 ? void 0 : _a.oldVersion) || '-',
+                ((_b = versions.get(gem.name)) === null || _b === void 0 ? void 0 : _b.newVersion) || '-',
+                changeLogUrl || `https://rubygems.org/gems/${gem.name}`
+            ];
+        })
     ]);
 }
 function postComment(text) {
@@ -258,7 +299,7 @@ function run() {
                 return;
             }
             core.debug('fetch rubygems descriptions from rubygems.org');
-            const rubygemsDescs = yield Promise.all(updatedRubyGems.map((gem) => __awaiter(this, void 0, void 0, function* () { return yield fetchRubyGemsDescription(gem); })));
+            const rubygemsDescs = yield Promise.all(updatedRubyGems.map((gem) => __awaiter(this, void 0, void 0, function* () { return yield fetchRubyGemsDescription(gem.name); })));
             if (rubygemsDescs.length === 0) {
                 return;
             }
@@ -272,7 +313,8 @@ function run() {
             }
             yield saveCache(changelogUrls);
             core.debug('post report');
-            const report = generateReport(changelogUrls);
+            const versions = new Map(updatedRubyGems.map(gem => [gem.name, gem]));
+            const report = generateReport(changelogUrls, versions);
             yield postComment(report);
         }
         catch (error) {
