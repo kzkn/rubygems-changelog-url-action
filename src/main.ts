@@ -6,9 +6,9 @@ import * as fs from 'fs'
 import replaceComment from '@aki77/actions-replace-comment'
 import {markdownTable} from 'markdown-table'
 import {Gem, searchChangeLogUrl} from 'rubygems-changelog-url'
-import {parseDiff} from './diff'
+import {parseDiff, AddedRubyGems} from './diff'
 
-async function listUpdatedRubyGems(): Promise<string[]> {
+async function listUpdatedRubyGems(): Promise<AddedRubyGems[]> {
   const token = core.getInput('githubToken')
   const octokit = github.getOctokit(token)
 
@@ -125,11 +125,13 @@ async function saveCache(changelogs: GemWithChangeLogUrl[]): Promise<void> {
   }
 }
 
-function generateReport(changelogs: GemWithChangeLogUrl[]): string {
+function generateReport(changelogs: GemWithChangeLogUrl[], versions: Map<string, AddedRubyGems>): string {
   return markdownTable([
-    ['Gem', 'ChangeLog URL'],
+    ['Gem', 'Before', 'After', 'ChangeLog URL'],
     ...changelogs.map(({gem, changeLogUrl}) => [
       gem.name,
+      versions.get(gem.name)?.oldVersion || '-',
+      versions.get(gem.name)?.newVersion || '-',
       changeLogUrl || `https://rubygems.org/gems/${gem.name}`
     ])
   ])
@@ -161,7 +163,7 @@ async function run(): Promise<void> {
 
     core.debug('fetch rubygems descriptions from rubygems.org')
     const rubygemsDescs = await Promise.all(
-      updatedRubyGems.map(async gem => await fetchRubyGemsDescription(gem))
+      updatedRubyGems.map(async gem => await fetchRubyGemsDescription(gem.name))
     )
     if (rubygemsDescs.length === 0) {
       return
@@ -179,7 +181,8 @@ async function run(): Promise<void> {
     await saveCache(changelogUrls)
 
     core.debug('post report')
-    const report = generateReport(changelogUrls)
+    const versions = new Map(updatedRubyGems.map(gem => [gem.name, gem]))
+    const report = generateReport(changelogUrls, versions)
     await postComment(report)
   } catch (error) {
     core.setFailed(error.message)

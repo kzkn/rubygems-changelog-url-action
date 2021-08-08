@@ -1,5 +1,14 @@
 type Lines = string[]
-type RubyGemsName = string
+type RubyGemsDiff = {
+  name: string
+  added: boolean
+  version: string
+}
+type RubyGemsChange = {
+  add?: RubyGemsDiff,
+  remove?: RubyGemsDiff
+}
+export type AddedRubyGems = { name: string; oldVersion?: string, newVersion: string }
 
 function isGemfileLockDiffStart(line: string): boolean {
   return !!line.match(/^diff --git a\/.*Gemfile.lock$/)
@@ -11,11 +20,6 @@ function isDiffStart(line: string): boolean {
 
 function isDiff(line: string): boolean {
   return !!line.match(/^[-+][^-+]/)
-}
-
-function extractRubyGemsName(line: string): string | undefined {
-  const match = line.match(/^[+] +([^ ]+) \(.*$/)
-  return match ? match[1] : undefined
 }
 
 export function extractGemfileLockDiffLines(diff: string): Lines[] {
@@ -40,16 +44,48 @@ export function extractGemfileLockDiffLines(diff: string): Lines[] {
   return diffs
 }
 
-export function extractAddedRubyGemsNames(lines: Lines): RubyGemsName[] {
-  return lines.map(extractRubyGemsName).filter(name => !!name) as RubyGemsName[]
+export function extractChangedRubyGemsNames(lines: Lines): RubyGemsDiff[] {
+  const regexp = new RegExp(`^[-+] {4}([^ ]+) \\((.+)\\).*$`)
+  const diffs = lines.map((line) => {
+    const match = line.match(regexp)
+    if (!match) { return null }
+
+    const [, name, version] = match
+    const added = line[0] === '+'
+    return { name, added, version }
+  })
+
+  return diffs.filter(diff => !!diff) as RubyGemsDiff[]
 }
 
-export function parseDiff(diff: string): RubyGemsName[] {
-  const names = new Set<RubyGemsName>()
+export function parseDiff(diff: string): AddedRubyGems[] {
+  const diffs: RubyGemsDiff[] = []
   for (const lines of extractGemfileLockDiffLines(diff)) {
-    for (const name of extractAddedRubyGemsNames(lines)) {
-      names.add(name)
+    for (const gem of extractChangedRubyGemsNames(lines)) {
+      diffs.push(gem)
     }
   }
-  return Array.from(names)
+
+  const changes = new Map<string, RubyGemsChange>()
+  for (const gem of diffs) {
+    let change = changes.get(gem.name) || {}
+    if (gem.added) {
+      change.add = gem
+    } else {
+      change.remove = gem
+    }
+    changes.set(gem.name, change)
+  }
+
+  const gems: AddedRubyGems[] = []
+  for (const [name, change] of changes.entries()) {
+    if (!change.add) continue
+
+    gems.push({
+      name: name,
+      oldVersion: change.remove?.version,
+      newVersion: change.add.version
+    })
+  }
+  return gems
 }
