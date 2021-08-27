@@ -14,13 +14,19 @@ The action works only with `pull_request` event.
 ## Example
 
 ```yaml
-name: Tests
+name: Gem Changelog
 on:
   pull_request:
+    paths:
+      - "Gemfile.lock"
 
 jobs:
   build:
+    runs-on: ubuntu-latest
+
     steps:
+      - uses: actions/checkout@v2
+
       - uses: kzkn/rubygems-changelog-url-action@v1
         with:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
