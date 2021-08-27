@@ -9,7 +9,7 @@ The action works only with `pull_request` event.
 ### Inputs
 
 - `githubToken` - The GITHUB_TOKEN secret.
-- `rubygemsToken` - A API token of rubygems.org
+- `rubygemsToken` - A API token of rubygems.org. Required scope is `Index rubygems`
 
 ## Example
 
