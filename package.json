@@ -33,7 +33,7 @@
     "rubygems-changelog-url": "kzkn/rubygems-changelog-url"
   },
   "devDependencies": {
-    "@types/node": "^16.7.1",
+    "@types/node": "^16.7.6",
     "@typescript-eslint/parser": "^4.29.3",
     "@vercel/ncc": "^0.29.2",
     "eslint": "^7.32.0",
