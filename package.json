@@ -26,20 +26,20 @@
   "license": "MIT",
   "dependencies": {
     "@actions/cache": "^1.0.8",
-    "@actions/core": "^1.5.0",
+    "@actions/core": "^1.6.0",
     "@actions/github": "^5.0.0",
     "@aki77/actions-replace-comment": "^0.5.2",
     "markdown-table": "^3.0.2",
     "rubygems-changelog-url": "kzkn/rubygems-changelog-url"
   },
   "devDependencies": {
-    "@types/node": "^17.0.0",
+    "@types/node": "^17.0.14",
     "@typescript-eslint/parser": "^4.30.0",
     "@vercel/ncc": "^0.30.0",
     "eslint": "^7.32.0",
     "eslint-plugin-github": "^4.2.0",
     "eslint-plugin-jest": "^26.0.0",
-    "jest": "^27.4.5",
+    "jest": "^27.4.7",
     "js-yaml": "^4.1.0",
     "prettier": "2.5.1",
     "ts-jest": "^27.1.3",
