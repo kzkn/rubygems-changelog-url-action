@@ -25,9 +25,9 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@actions/cache": "^1.0.10",
+    "@actions/cache": "^2.0.6",
     "@actions/core": "^1.6.0",
-    "@actions/github": "^5.0.0",
+    "@actions/github": "^5.0.3",
     "@aki77/actions-replace-comment": "^0.5.2",
     "markdown-table": "^3.0.2",
     "rubygems-changelog-url": "kzkn/rubygems-changelog-url"
