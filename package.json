@@ -27,7 +27,7 @@
   "dependencies": {
     "@actions/cache": "^2.0.6",
     "@actions/core": "^1.6.0",
-    "@actions/github": "^5.0.0",
+    "@actions/github": "^5.1.1",
     "@aki77/actions-replace-comment": "^0.5.2",
     "markdown-table": "^3.0.2",
     "rubygems-changelog-url": "kzkn/rubygems-changelog-url"
