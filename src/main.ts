@@ -114,7 +114,7 @@ async function saveCache(changelogs: GemWithChangeLogUrl[]): Promise<void> {
   const key = `changelogs-${github.context.issue.number}`
   try {
     await cache.saveCache(paths, key)
-  } catch (error) {
+  } catch (error: any) {
     if (error.name === cache.ValidationError.name) {
       throw error
     } else if (error.name === cache.ReserveCacheError.name) {
@@ -184,7 +184,7 @@ async function run(): Promise<void> {
     const versions = new Map(updatedRubyGems.map(gem => [gem.name, gem]))
     const report = generateReport(changelogUrls, versions)
     await postComment(report)
-  } catch (error) {
+  } catch (error: any) {
     core.setFailed(error.message)
   }
 }
