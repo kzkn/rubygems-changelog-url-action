@@ -72,23 +72,34 @@ type GemWithChangeLogUrl = {
   changeLogUrl: string | null
 }
 
-async function rubyGemsChangeLogUrl(gem: Gem, option?: { token: string }): Promise<GemWithChangeLogUrl> {
+async function rubyGemsChangeLogUrl(
+  gem: Gem,
+  option?: {token: string}
+): Promise<GemWithChangeLogUrl> {
   let [found, changeLogUrl] = await findChangeLogUrlFromCache(gem)
   if (!found) {
     changeLogUrl = await searchChangeLogUrl(gem, option)
   }
-  return { gem, changeLogUrl }
+  return {gem, changeLogUrl}
 }
 
 let restoredCache: Map<string, string | null>
-async function findChangeLogUrlFromCache(gem: Gem): Promise<[boolean, string | null]> {
+async function findChangeLogUrlFromCache(
+  gem: Gem
+): Promise<[boolean, string | null]> {
   if (!restoredCache) {
-    const hit = await cache.restoreCache(['changelogs.json'], `changelogs-${github.context.issue.number}`, ['changelogs-'])
+    const hit = await cache.restoreCache(
+      ['changelogs.json'],
+      `changelogs-${github.context.issue.number}`,
+      ['changelogs-']
+    )
     restoredCache = new Map()
     if (hit) {
       core.debug(`cache hit: ${hit}`)
       const content = fs.readFileSync('changelogs.json')
-      const cachedChangelogs = JSON.parse(content.toString()) as { [key: string]: string | null }
+      const cachedChangelogs = JSON.parse(content.toString()) as {
+        [key: string]: string | null
+      }
       for (const [k, v] of Object.entries(cachedChangelogs)) {
         restoredCache.set(k, v)
       }
@@ -105,8 +116,10 @@ async function findChangeLogUrlFromCache(gem: Gem): Promise<[boolean, string | n
 }
 
 async function saveCache(changelogs: GemWithChangeLogUrl[]): Promise<void> {
-  const hash: { [key: string]: string | null } =
-    changelogs.reduce((obj, { gem, changeLogUrl }) => ({ ...obj, [gem.name]: changeLogUrl }), {})
+  const hash: {[key: string]: string | null} = changelogs.reduce(
+    (obj, {gem, changeLogUrl}) => ({...obj, [gem.name]: changeLogUrl}),
+    {}
+  )
   const content = JSON.stringify(hash)
   fs.writeFileSync('changelogs.json', content)
 
@@ -125,7 +138,10 @@ async function saveCache(changelogs: GemWithChangeLogUrl[]): Promise<void> {
   }
 }
 
-function generateReport(changelogs: GemWithChangeLogUrl[], versions: Map<string, AddedRubyGems>): string {
+function generateReport(
+  changelogs: GemWithChangeLogUrl[],
+  versions: Map<string, AddedRubyGems>
+): string {
   return markdownTable([
     ['Gem', 'Before', 'After', 'ChangeLog URL'],
     ...changelogs.map(({gem, changeLogUrl}) => [
@@ -173,8 +189,12 @@ async function run(): Promise<void> {
     const changelogUrls: GemWithChangeLogUrl[] = []
     for (const gem of rubygemsDescs.filter(isNotNull)) {
       core.debug(`search rubygems changelog urls: ${gem.name}`)
-      const url = await rubyGemsChangeLogUrl(gem, { token: core.getInput('githubToken') })
-      core.debug(`search rubygems changelog urls: ${gem.name} => ${url.changeLogUrl}`)
+      const url = await rubyGemsChangeLogUrl(gem, {
+        token: core.getInput('githubToken')
+      })
+      core.debug(
+        `search rubygems changelog urls: ${gem.name} => ${url.changeLogUrl}`
+      )
       changelogUrls.push(url)
     }
 

@@ -5,10 +5,14 @@ type RubyGemsDiff = {
   version: string
 }
 type RubyGemsChange = {
-  add?: RubyGemsDiff,
+  add?: RubyGemsDiff
   remove?: RubyGemsDiff
 }
-export type AddedRubyGems = { name: string; oldVersion?: string, newVersion: string }
+export type AddedRubyGems = {
+  name: string
+  oldVersion?: string
+  newVersion: string
+}
 
 function isGemfileLockDiffStart(line: string): boolean {
   return !!line.match(/^diff --git a\/.*Gemfile.lock$/)
@@ -46,13 +50,15 @@ export function extractGemfileLockDiffLines(diff: string): Lines[] {
 
 export function extractChangedRubyGemsNames(lines: Lines): RubyGemsDiff[] {
   const regexp = new RegExp(`^[-+] {4}([^ ]+) \\((.+)\\).*$`)
-  const diffs = lines.map((line) => {
+  const diffs = lines.map(line => {
     const match = line.match(regexp)
-    if (!match) { return null }
+    if (!match) {
+      return null
+    }
 
     const [, name, version] = match
     const added = line[0] === '+'
-    return { name, added, version }
+    return {name, added, version}
   })
 
   return diffs.filter(diff => !!diff) as RubyGemsDiff[]

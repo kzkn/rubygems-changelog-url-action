@@ -1,5 +1,9 @@
-import { extractGemfileLockDiffLines, extractChangedRubyGemsNames, parseDiff } from '../src/diff'
-import { expect, test } from '@jest/globals'
+import {
+  extractGemfileLockDiffLines,
+  extractChangedRubyGemsNames,
+  parseDiff
+} from '../src/diff'
+import {expect, test} from '@jest/globals'
 
 const diff = `
 diff --git a/.github/fixtures/Gemfile.lock b/.github/fixtures/Gemfile.lock
@@ -60,27 +64,27 @@ test('extractChangedRubyGemsNames', () => {
     '-    parser (3.0.1.1)',
     '+    parser (3.0.2.0)',
     '-    rake (13.0.3)',
-    '+    rake (13.0.6)',
+    '+    rake (13.0.6)'
   ]
 
   const gems = extractChangedRubyGemsNames(lines)
   expect(gems).toStrictEqual([
-    { name: 'aspnet_password_hasher', version: '0.1.0', added: false },
-    { name: 'aspnet_password_hasher', version: '1.0.0', added: true },
-    { name: 'parser', version: '3.0.1.1', added: false },
-    { name: 'parser', version: '3.0.2.0', added: true },
-    { name: 'rake', version: '13.0.3', added: false },
-    { name: 'rake', version: '13.0.6', added: true },
-    { name: 'rspec', version: '3.10.0', added: true },
-    { name: 'simplecov', version: '0.21.2', added: false },
+    {name: 'aspnet_password_hasher', version: '0.1.0', added: false},
+    {name: 'aspnet_password_hasher', version: '1.0.0', added: true},
+    {name: 'parser', version: '3.0.1.1', added: false},
+    {name: 'parser', version: '3.0.2.0', added: true},
+    {name: 'rake', version: '13.0.3', added: false},
+    {name: 'rake', version: '13.0.6', added: true},
+    {name: 'rspec', version: '3.10.0', added: true},
+    {name: 'simplecov', version: '0.21.2', added: false}
   ])
 })
 
 test('parseDiff', () => {
   const gemnames = parseDiff(diff)
   expect(gemnames).toStrictEqual([
-    { name: 'aspnet_password_hasher', oldVersion: '0.1.0', newVersion: '1.0.0' },
-    { name: 'parser', oldVersion: '3.0.1.1', newVersion: '3.0.2.0' },
-    { name: 'rake', oldVersion: '13.0.3', newVersion: '13.0.6' }
+    {name: 'aspnet_password_hasher', oldVersion: '0.1.0', newVersion: '1.0.0'},
+    {name: 'parser', oldVersion: '3.0.1.1', newVersion: '3.0.2.0'},
+    {name: 'rake', oldVersion: '13.0.3', newVersion: '13.0.6'}
   ])
 })
