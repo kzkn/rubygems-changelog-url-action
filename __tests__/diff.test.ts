@@ -74,9 +74,7 @@ test('extractChangedRubyGemsNames', () => {
     {name: 'parser', version: '3.0.1.1', added: false},
     {name: 'parser', version: '3.0.2.0', added: true},
     {name: 'rake', version: '13.0.3', added: false},
-    {name: 'rake', version: '13.0.6', added: true},
-    {name: 'rspec', version: '3.10.0', added: true},
-    {name: 'simplecov', version: '0.21.2', added: false}
+    {name: 'rake', version: '13.0.6', added: true}
   ])
 })
 
