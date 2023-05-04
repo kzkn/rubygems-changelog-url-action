@@ -57,7 +57,7 @@ export function extractChangedRubyGemsNames(lines: Lines): RubyGemsDiff[] {
     }
 
     const [, name, version] = match
-    const added = line[0] === '+'
+    const added = line.startsWith('+')
     return {name, added, version}
   })
 
@@ -74,7 +74,7 @@ export function parseDiff(diff: string): AddedRubyGems[] {
 
   const changes = new Map<string, RubyGemsChange>()
   for (const gem of diffs) {
-    let change = changes.get(gem.name) || {}
+    const change = changes.get(gem.name) || {}
     if (gem.added) {
       change.add = gem
     } else {
@@ -88,7 +88,7 @@ export function parseDiff(diff: string): AddedRubyGems[] {
     if (!change.add) continue
 
     gems.push({
-      name: name,
+      name,
       oldVersion: change.remove?.version,
       newVersion: change.add.version
     })

@@ -14,7 +14,7 @@ async function listUpdatedRubyGems(): Promise<AddedRubyGems[]> {
 
   if (core.isDebug()) {
     const rateLimit = await octokit.request('GET /rate_limit')
-    console.log('rate limit', rateLimit)
+    console.log('rate limit', rateLimit) // eslint-disable-line no-console
   }
 
   const {data: pullRequest} = await octokit.rest.pulls.get({
@@ -76,7 +76,7 @@ async function rubyGemsChangeLogUrl(
   gem: Gem,
   option?: {token: string}
 ): Promise<GemWithChangeLogUrl> {
-  let [found, changeLogUrl] = await findChangeLogUrlFromCache(gem)
+  let [found, changeLogUrl] = await findChangeLogUrlFromCache(gem) // eslint-disable-line prefer-const
   if (!found) {
     changeLogUrl = await searchChangeLogUrl(gem, option)
   }
@@ -127,13 +127,17 @@ async function saveCache(changelogs: GemWithChangeLogUrl[]): Promise<void> {
   const key = `changelogs-${github.context.issue.number}`
   try {
     await cache.saveCache(paths, key)
-  } catch (error: any) {
-    if (error.name === cache.ValidationError.name) {
-      throw error
-    } else if (error.name === cache.ReserveCacheError.name) {
-      core.info(error.message)
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      if (error.name === cache.ValidationError.name) {
+        throw error
+      } else if (error.name === cache.ReserveCacheError.name) {
+        core.info(error.message)
+      } else {
+        core.info(`[warning]${error.message}`)
+      }
     } else {
-      core.info(`[warning]${error.message}`)
+      core.info(`[warning]${error}`)
     }
   }
 }
@@ -204,8 +208,12 @@ async function run(): Promise<void> {
     const versions = new Map(updatedRubyGems.map(gem => [gem.name, gem]))
     const report = generateReport(changelogUrls, versions)
     await postComment(report)
-  } catch (error: any) {
-    core.setFailed(error.message)
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      core.setFailed(error.message)
+    } else {
+      core.info(`[warning]${error}`)
+    }
   }
 }
 
