@@ -23,6 +23,7 @@ on:
 jobs:
   rubygems_changelog:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: kzkn/rubygems-changelog-url-action@v1
