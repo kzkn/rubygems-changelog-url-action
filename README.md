@@ -21,7 +21,7 @@ on:
       - "Gemfile.lock"
 
 jobs:
-  rubygems:
+  rubygems_changelog:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
