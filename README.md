@@ -26,7 +26,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      - uses: kzkn/rubygems-changelog-url-action@v1
+      - uses: kzkn/rubygems-changelog-url-action@v2
         with:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           rubygemsToken: ${{ secrets.RUBYGEMS_TOKEN }}
