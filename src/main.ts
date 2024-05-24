@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as cache from '@actions/cache'
-import * as https from 'https'
+import fetch from 'node-fetch'
 import * as fs from 'fs'
 import replaceComment from '@aki77/actions-replace-comment'
 import {markdownTable} from 'markdown-table'
@@ -31,40 +31,27 @@ async function listUpdatedRubyGems(): Promise<AddedRubyGems[]> {
 
 async function fetchRubyGemsDescription(gemname: string): Promise<Gem | null> {
   const token = core.getInput('rubygemsToken')
-  return new Promise<Gem | null>(resolve => {
-    const options = {
-      hostname: 'rubygems.org',
-      port: 443,
-      path: `/api/v1/gems/${gemname}.json`,
-      method: 'GET',
-      headers: {
-        Authorization: token,
-        'Content-Type': 'application/json'
-      }
-    }
-    const req = https.request(options, res => {
-      if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
-        let data = ''
-        res.on('data', chunk => {
-          data += chunk
-        })
-        res.on('end', () => {
-          const gem = JSON.parse(data)
-          resolve({
-            name: gem['name'],
-            projectUri: gem['project_uri'],
-            homepageUri: gem['homepage_uri'],
-            sourceCodeUri: gem['source_code_uri'],
-            changelogUri: gem['changelog_uri']
-          })
-        })
-      } else {
-        resolve(null)
-      }
-    })
+  const headers = {
+    Authorization: token,
+    'Content-Type': 'application/json'
+  }
 
-    req.end()
+  const res = await fetch(`https://rubygems.org/api/v1/gems/${gemname}.json`, {
+    headers
   })
+  if (!res.ok) {
+    return null
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const gem = (await res.json()) as any
+  return {
+    name: gem['name'],
+    projectUri: gem['project_uri'],
+    homepageUri: gem['homepage_uri'],
+    sourceCodeUri: gem['source_code_uri'],
+    changelogUri: gem['changelog_uri']
+  }
 }
 
 type GemWithChangeLogUrl = {

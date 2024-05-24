@@ -33,6 +33,7 @@
     "@actions/github": "^6.0.0",
     "@aki77/actions-replace-comment": "0.6.0",
     "markdown-table": "^3.0.3",
+    "node-fetch": "^3.3.2",
     "rubygems-changelog-url": "github:kzkn/rubygems-changelog-url"
   },
   "devDependencies": {
