@@ -37,6 +37,7 @@
     "rubygems-changelog-url": "github:kzkn/rubygems-changelog-url"
   },
   "devDependencies": {
+    "@jest/globals": "^29.7.0",
     "@types/node": "^20.12.12",
     "@typescript-eslint/parser": "^7.10.0",
     "@vercel/ncc": "^0.38.1",

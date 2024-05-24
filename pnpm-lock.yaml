@@ -30,6 +30,9 @@ importers:
         specifier: github:kzkn/rubygems-changelog-url
         version: https://codeload.github.com/kzkn/rubygems-changelog-url/tar.gz/8b32f87b8b551ec7aee565a3dc97fb6437c52b33
     devDependencies:
+      '@jest/globals':
+        specifier: ^29.7.0
+        version: 29.7.0
       '@types/node':
         specifier: ^20.12.12
         version: 20.12.12
