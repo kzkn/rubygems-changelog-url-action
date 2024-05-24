@@ -204,10 +204,11 @@ async function run(): Promise<void> {
 
     await saveCache(changelogUrls)
 
-    core.debug('post report')
+    core.debug('post report, start')
     const versions = new Map(updatedRubyGems.map(gem => [gem.name, gem]))
     const report = generateReport(changelogUrls, versions)
     await postComment(report)
+    core.debug('post report, finish')
   } catch (error: unknown) {
     if (error instanceof Error) {
       core.setFailed(error.message)

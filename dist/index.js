@@ -315,10 +315,11 @@ function run() {
                 changelogUrls.push(url);
             }
             yield saveCache(changelogUrls);
-            core.debug('post report');
+            core.debug('post report, start');
             const versions = new Map(updatedRubyGems.map(gem => [gem.name, gem]));
             const report = generateReport(changelogUrls, versions);
             yield postComment(report);
+            core.debug('post report, finish');
         }
         catch (error) {
             if (error instanceof Error) {
