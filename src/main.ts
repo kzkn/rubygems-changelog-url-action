@@ -63,11 +63,20 @@ async function rubyGemsChangeLogUrl(
   gem: Gem,
   option?: {token: string}
 ): Promise<GemWithChangeLogUrl> {
-  let [found, changeLogUrl] = await findChangeLogUrlFromCache(gem) // eslint-disable-line prefer-const
-  if (!found) {
-    changeLogUrl = await searchChangeLogUrl(gem, option)
+  try {
+    let [found, changeLogUrl] = await findChangeLogUrlFromCache(gem) // eslint-disable-line prefer-const
+    if (!found) {
+      changeLogUrl = await searchChangeLogUrl(gem, option)
+    }
+    return {gem, changeLogUrl}
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      core.info(`[warning] rubyGemsChangeLogUrl: ${error.message}`)
+    } else {
+      core.info(`[warning] rubyGemsChangeLogUrl: ${error}`)
+    }
+    return {gem, changeLogUrl: null}
   }
-  return {gem, changeLogUrl}
 }
 
 let restoredCache: Map<string, string | null>
