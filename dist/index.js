@@ -185,11 +185,22 @@ function fetchRubyGemsDescription(gemname) {
 }
 function rubyGemsChangeLogUrl(gem, option) {
     return __awaiter(this, void 0, void 0, function* () {
-        let [found, changeLogUrl] = yield findChangeLogUrlFromCache(gem); // eslint-disable-line prefer-const
-        if (!found) {
-            changeLogUrl = yield (0, rubygems_changelog_url_1.searchChangeLogUrl)(gem, option);
+        try {
+            let [found, changeLogUrl] = yield findChangeLogUrlFromCache(gem); // eslint-disable-line prefer-const
+            if (!found) {
+                changeLogUrl = yield (0, rubygems_changelog_url_1.searchChangeLogUrl)(gem, option);
+            }
+            return { gem, changeLogUrl };
         }
-        return { gem, changeLogUrl };
+        catch (error) {
+            if (error instanceof Error) {
+                core.info(`[warning] rubyGemsChangeLogUrl: ${error.message}`);
+            }
+            else {
+                core.info(`[warning] rubyGemsChangeLogUrl: ${error}`);
+            }
+            return { gem, changeLogUrl: null };
+        }
     });
 }
 let restoredCache;
