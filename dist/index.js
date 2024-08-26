@@ -159,6 +159,13 @@ function listUpdatedRubyGems() {
         return (0, diff_1.parseDiff)(pullRequest.toString());
     });
 }
+function majorVersion(version) {
+    return version.split('.')[0];
+}
+function isMajorVersionUp(gem) {
+    return (!!gem.oldVersion &&
+        majorVersion(gem.oldVersion) !== majorVersion(gem.newVersion));
+}
 function fetchRubyGemsDescription(gemname) {
     return __awaiter(this, void 0, void 0, function* () {
         const token = core.getInput('rubygemsToken');
@@ -271,14 +278,14 @@ function generateReport(changelogs, versions) {
         })
     ]);
 }
-function postComment(text) {
+function postComment(title, text) {
     return __awaiter(this, void 0, void 0, function* () {
         yield (0, actions_replace_comment_1.default)({
             token: core.getInput('githubToken'),
             owner: github.context.repo.owner,
             repo: github.context.repo.repo,
             issue_number: github.context.issue.number,
-            body: `## Updated RubyGems ChangeLog URLs
+            body: `## ${title}
 ${text}
 `
         });
@@ -313,8 +320,16 @@ function run() {
             yield saveCache(changelogUrls);
             core.debug('post report, start');
             const versions = new Map(updatedRubyGems.map(gem => [gem.name, gem]));
-            const report = generateReport(changelogUrls, versions);
-            yield postComment(report);
+            const majorVersionUps = changelogUrls.filter(({ gem }) => {
+                const gemver = versions.get(gem.name);
+                return gemver && isMajorVersionUp(gemver);
+            });
+            if (majorVersionUps.length > 0) {
+                const majorVerUpReport = generateReport(majorVersionUps, versions);
+                yield postComment(':warning: Major Version Up', majorVerUpReport);
+            }
+            const fullReport = generateReport(changelogUrls, versions);
+            yield postComment('Updated RubyGems ChangeLog URLs', fullReport); // eslint-disable-line i18n-text/no-en
             core.debug('post report, finish');
         }
         catch (error) {
