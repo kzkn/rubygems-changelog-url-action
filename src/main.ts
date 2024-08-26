@@ -29,6 +29,17 @@ async function listUpdatedRubyGems(): Promise<AddedRubyGems[]> {
   return parseDiff(pullRequest.toString())
 }
 
+function majorVersion(version: string): string {
+  return version.split('.')[0]
+}
+
+function isMajorVersionUp(gem: AddedRubyGems): boolean {
+  return (
+    !!gem.oldVersion &&
+    majorVersion(gem.oldVersion) !== majorVersion(gem.newVersion)
+  )
+}
+
 async function fetchRubyGemsDescription(gemname: string): Promise<Gem | null> {
   const token = core.getInput('rubygemsToken')
   const headers = {
@@ -153,13 +164,13 @@ function generateReport(
   ])
 }
 
-async function postComment(text: string): Promise<void> {
+async function postComment(title: string, text: string): Promise<void> {
   await replaceComment({
     token: core.getInput('githubToken'),
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
     issue_number: github.context.issue.number,
-    body: `## Updated RubyGems ChangeLog URLs
+    body: `## ${title}
 ${text}
 `
   })
@@ -202,8 +213,17 @@ async function run(): Promise<void> {
 
     core.debug('post report, start')
     const versions = new Map(updatedRubyGems.map(gem => [gem.name, gem]))
-    const report = generateReport(changelogUrls, versions)
-    await postComment(report)
+    const majorVersionUps = changelogUrls.filter(({gem}) => {
+      const gemver = versions.get(gem.name)
+      return gemver && isMajorVersionUp(gemver)
+    })
+    if (majorVersionUps.length > 0) {
+      const majorVerUpReport = generateReport(majorVersionUps, versions)
+      await postComment(':warning: Major Version Up', majorVerUpReport)
+    }
+
+    const fullReport = generateReport(changelogUrls, versions)
+    await postComment('Updated RubyGems ChangeLog URLs', fullReport) // eslint-disable-line i18n-text/no-en
     core.debug('post report, finish')
   } catch (error: unknown) {
     if (error instanceof Error) {
