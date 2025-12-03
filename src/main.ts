@@ -61,7 +61,8 @@ async function fetchRubyGemsDescription(gemname: string): Promise<Gem | null> {
     projectUri: gem['project_uri'],
     homepageUri: gem['homepage_uri'],
     sourceCodeUri: gem['source_code_uri'],
-    changelogUri: gem['changelog_uri']
+    changelogUri: gem['changelog_uri'],
+    licenses: gem['licenses']
   }
 }
 
@@ -154,9 +155,10 @@ function generateReport(
   versions: Map<string, AddedRubyGems>
 ): string {
   return markdownTable([
-    ['Gem', 'Before', 'After', 'ChangeLog URL'],
+    ['Gem', 'License', 'Before', 'After', 'ChangeLog URL'],
     ...changelogs.map(({gem, changeLogUrl}) => [
       gem.name,
+      (gem.licenses || []).join(),
       versions.get(gem.name)?.oldVersion || '-',
       versions.get(gem.name)?.newVersion || '-',
       changeLogUrl || `https://rubygems.org/gems/${gem.name}`
