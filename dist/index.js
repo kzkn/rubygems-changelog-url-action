@@ -138,7 +138,7 @@ const node_fetch_1 = __importDefault(__nccwpck_require__(1486));
 const fs = __importStar(__nccwpck_require__(7147));
 const actions_replace_comment_1 = __importDefault(__nccwpck_require__(6240));
 const markdown_table_1 = __nccwpck_require__(6850);
-const rubygems_changelog_url_1 = __nccwpck_require__(4254);
+const rubygems_changelog_url_1 = __nccwpck_require__(1667);
 const diff_1 = __nccwpck_require__(7738);
 function listUpdatedRubyGems() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -186,7 +186,8 @@ function fetchRubyGemsDescription(gemname) {
             projectUri: gem['project_uri'],
             homepageUri: gem['homepage_uri'],
             sourceCodeUri: gem['source_code_uri'],
-            changelogUri: gem['changelog_uri']
+            changelogUri: gem['changelog_uri'],
+            licenses: gem['licenses']
         };
     });
 }
@@ -266,11 +267,12 @@ function saveCache(changelogs) {
 }
 function generateReport(changelogs, versions) {
     return (0, markdown_table_1.markdownTable)([
-        ['Gem', 'Before', 'After', 'ChangeLog URL'],
+        ['Gem', 'License', 'Before', 'After', 'ChangeLog URL'],
         ...changelogs.map(({ gem, changeLogUrl }) => {
             var _a, _b;
             return [
                 gem.name,
+                (gem.licenses || []).join(),
                 ((_a = versions.get(gem.name)) === null || _a === void 0 ? void 0 : _a.oldVersion) || '-',
                 ((_b = versions.get(gem.name)) === null || _b === void 0 ? void 0 : _b.newVersion) || '-',
                 changeLogUrl || `https://rubygems.org/gems/${gem.name}`
@@ -51413,7 +51415,7 @@ function onceStrict (fn) {
 
 /***/ }),
 
-/***/ 8151:
+/***/ 8089:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -51518,7 +51520,7 @@ exports.getDirectoryEntries = getDirectoryEntries;
 
 /***/ }),
 
-/***/ 4254:
+/***/ 1667:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -51557,7 +51559,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.searchChangeLogUrl = void 0;
-const github = __importStar(__nccwpck_require__(8151));
+const github = __importStar(__nccwpck_require__(8089));
 const GITHUB_REPOSITORY_URL_REGEXP = new RegExp('^https://github.com/([^/]+)/([^/]+)/?$');
 const GITHUB_TREE_URL_REGEXP = new RegExp('^https://github.com/([^/]+)/([^/]+)/tree/[^/]+/(.+)$');
 function isGithubRepositoryUrl(url) {

@@ -28,7 +28,7 @@ importers:
         version: 3.3.2
       rubygems-changelog-url:
         specifier: github:kzkn/rubygems-changelog-url
-        version: https://codeload.github.com/kzkn/rubygems-changelog-url/tar.gz/8b32f87b8b551ec7aee565a3dc97fb6437c52b33
+        version: https://codeload.github.com/kzkn/rubygems-changelog-url/tar.gz/b0f8ee3816dbae9d30204c41d72f95cde318b131
     devDependencies:
       '@jest/globals':
         specifier: ^29.7.0
@@ -2049,8 +2049,8 @@ packages:
     resolution: {integrity: sha512-JZkJMZkAGFFPP2YqXZXPbMlMBgsxzE8ILs4lMIX/2o0L9UBw9O/Y3o6wFw/i9YLapcUJWwqbi3kdxIPdC62TIA==}
     hasBin: true
 
-  rubygems-changelog-url@https://codeload.github.com/kzkn/rubygems-changelog-url/tar.gz/8b32f87b8b551ec7aee565a3dc97fb6437c52b33:
-    resolution: {tarball: https://codeload.github.com/kzkn/rubygems-changelog-url/tar.gz/8b32f87b8b551ec7aee565a3dc97fb6437c52b33}
+  rubygems-changelog-url@https://codeload.github.com/kzkn/rubygems-changelog-url/tar.gz/b0f8ee3816dbae9d30204c41d72f95cde318b131:
+    resolution: {tarball: https://codeload.github.com/kzkn/rubygems-changelog-url/tar.gz/b0f8ee3816dbae9d30204c41d72f95cde318b131}
     version: 0.1.0
 
   run-parallel@1.2.0:
@@ -4908,7 +4908,7 @@ snapshots:
     dependencies:
       glob: 7.2.3
 
-  rubygems-changelog-url@https://codeload.github.com/kzkn/rubygems-changelog-url/tar.gz/8b32f87b8b551ec7aee565a3dc97fb6437c52b33: {}
+  rubygems-changelog-url@https://codeload.github.com/kzkn/rubygems-changelog-url/tar.gz/b0f8ee3816dbae9d30204c41d72f95cde318b131: {}
 
   run-parallel@1.2.0:
     dependencies:
