@@ -56,11 +56,6 @@ async function fetchRubyGemsDescription(
       headers
     }
   )
-  // if (!res.ok) {
-  //   res = await fetch(`https://rubygems.org/api/v1/gems/${gemname}.json`, {
-  //     headers
-  //   })
-  // }
   if (!res.ok) {
     return null
   }
