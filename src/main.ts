@@ -40,16 +40,21 @@ function isMajorVersionUp(gem: AddedRubyGems): boolean {
   )
 }
 
-async function fetchRubyGemsDescription(gemname: string): Promise<Gem | null> {
+async function fetchRubyGemsDescription(gemname: string, version: string): Promise<Gem | null> {
   const token = core.getInput('rubygemsToken')
   const headers = {
     Authorization: token,
     'Content-Type': 'application/json'
   }
 
-  const res = await fetch(`https://rubygems.org/api/v1/gems/${gemname}.json`, {
+  let res = await fetch(`https://rubygems.org/api/v2/rubygems/${gemname}/versions/${version}.json`, {
     headers
   })
+  if (!res.ok) {
+    res = await fetch(`https://rubygems.org/api/v1/gems/${gemname}.json`, {
+      headers
+    })
+  }
   if (!res.ok) {
     return null
   }
@@ -192,7 +197,7 @@ async function run(): Promise<void> {
 
     core.debug('fetch rubygems descriptions from rubygems.org')
     const rubygemsDescs = await Promise.all(
-      updatedRubyGems.map(async gem => await fetchRubyGemsDescription(gem.name))
+      updatedRubyGems.map(async gem => await fetchRubyGemsDescription(gem.name, gem.newVersion))
     )
     if (rubygemsDescs.length === 0) {
       return
