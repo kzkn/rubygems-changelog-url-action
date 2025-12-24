@@ -50,17 +50,17 @@ async function fetchRubyGemsDescription(
     'Content-Type': 'application/json'
   }
 
-  let res = await fetch(
+  const res = await fetch(
     `https://rubygems.org/api/v2/rubygems/${gemname}/versions/${version}.json`,
     {
       headers
     }
   )
-  if (!res.ok) {
-    res = await fetch(`https://rubygems.org/api/v1/gems/${gemname}.json`, {
-      headers
-    })
-  }
+  // if (!res.ok) {
+  //   res = await fetch(`https://rubygems.org/api/v1/gems/${gemname}.json`, {
+  //     headers
+  //   })
+  // }
   if (!res.ok) {
     return null
   }
