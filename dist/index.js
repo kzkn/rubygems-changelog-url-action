@@ -166,16 +166,21 @@ function isMajorVersionUp(gem) {
     return (!!gem.oldVersion &&
         majorVersion(gem.oldVersion) !== majorVersion(gem.newVersion));
 }
-function fetchRubyGemsDescription(gemname) {
+function fetchRubyGemsDescription(gemname, version) {
     return __awaiter(this, void 0, void 0, function* () {
         const token = core.getInput('rubygemsToken');
         const headers = {
             Authorization: token,
             'Content-Type': 'application/json'
         };
-        const res = yield (0, node_fetch_1.default)(`https://rubygems.org/api/v1/gems/${gemname}.json`, {
+        let res = yield (0, node_fetch_1.default)(`https://rubygems.org/api/v2/rubygems/${gemname}/versions/${version}.json`, {
             headers
         });
+        if (!res.ok) {
+            res = yield (0, node_fetch_1.default)(`https://rubygems.org/api/v1/gems/${gemname}.json`, {
+                headers
+            });
+        }
         if (!res.ok) {
             return null;
         }
@@ -305,7 +310,7 @@ function run() {
                 return;
             }
             core.debug('fetch rubygems descriptions from rubygems.org');
-            const rubygemsDescs = yield Promise.all(updatedRubyGems.map((gem) => __awaiter(this, void 0, void 0, function* () { return yield fetchRubyGemsDescription(gem.name); })));
+            const rubygemsDescs = yield Promise.all(updatedRubyGems.map((gem) => __awaiter(this, void 0, void 0, function* () { return yield fetchRubyGemsDescription(gem.name, gem.newVersion); })));
             if (rubygemsDescs.length === 0) {
                 return;
             }
