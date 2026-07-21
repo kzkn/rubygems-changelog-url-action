@@ -7,7 +7,11 @@ require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.parseDiff = exports.extractChangedRubyGemsNames = exports.extractGemfileLockDiffLines = void 0;
+exports.parsePatches = exports.parseDiff = exports.extractChangedRubyGemsNames = exports.extractGemfileLockDiffLines = exports.isGemfileLockPath = void 0;
+function isGemfileLockPath(filename) {
+    return /(^|\/)Gemfile\.lock$/.test(filename);
+}
+exports.isGemfileLockPath = isGemfileLockPath;
 function isGemfileLockDiffStart(line) {
     return !!line.match(/^diff --git a\/.*Gemfile.lock$/);
 }
@@ -54,14 +58,8 @@ function extractChangedRubyGemsNames(lines) {
     return diffs.filter(diff => !!diff);
 }
 exports.extractChangedRubyGemsNames = extractChangedRubyGemsNames;
-function parseDiff(diff) {
+function aggregateChanges(diffs) {
     var _a;
-    const diffs = [];
-    for (const lines of extractGemfileLockDiffLines(diff)) {
-        for (const gem of extractChangedRubyGemsNames(lines)) {
-            diffs.push(gem);
-        }
-    }
     const changes = new Map();
     for (const gem of diffs) {
         const change = changes.get(gem.name) || {};
@@ -85,7 +83,21 @@ function parseDiff(diff) {
     }
     return gems;
 }
+function parseDiff(diff) {
+    const diffs = [];
+    for (const lines of extractGemfileLockDiffLines(diff)) {
+        for (const gem of extractChangedRubyGemsNames(lines)) {
+            diffs.push(gem);
+        }
+    }
+    return aggregateChanges(diffs);
+}
 exports.parseDiff = parseDiff;
+function parsePatches(patches) {
+    const allLines = patches.flatMap(patch => patch.split('\n')).filter(isDiff);
+    return aggregateChanges(extractChangedRubyGemsNames(allLines));
+}
+exports.parsePatches = parsePatches;
 
 
 /***/ }),
@@ -148,15 +160,16 @@ function listUpdatedRubyGems() {
             const rateLimit = yield octokit.request('GET /rate_limit');
             console.log('rate limit', rateLimit); // eslint-disable-line no-console
         }
-        const { data: pullRequest } = yield octokit.rest.pulls.get({
+        const files = yield octokit.paginate(octokit.rest.pulls.listFiles, {
             owner: github.context.repo.owner,
             repo: github.context.repo.repo,
             pull_number: github.context.issue.number,
-            mediaType: {
-                format: 'diff'
-            }
+            per_page: 100
         });
-        return (0, diff_1.parseDiff)(pullRequest.toString());
+        const patches = files
+            .filter(f => (0, diff_1.isGemfileLockPath)(f.filename))
+            .flatMap(f => (f.patch ? [f.patch] : []));
+        return (0, diff_1.parsePatches)(patches);
     });
 }
 function majorVersion(version) {

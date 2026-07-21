@@ -1,7 +1,8 @@
 import {
   extractGemfileLockDiffLines,
   extractChangedRubyGemsNames,
-  parseDiff
+  parseDiff,
+  parsePatches
 } from '../src/diff'
 import {expect, test} from '@jest/globals'
 
@@ -80,6 +81,55 @@ test('extractChangedRubyGemsNames', () => {
 
 test('parseDiff', () => {
   const gemnames = parseDiff(diff)
+  expect(gemnames).toStrictEqual([
+    {name: 'aspnet_password_hasher', oldVersion: '0.1.0', newVersion: '1.0.0'},
+    {name: 'parser', oldVersion: '3.0.1.1', newVersion: '3.0.2.0'},
+    {name: 'rake', oldVersion: '13.0.3', newVersion: '13.0.6'}
+  ])
+})
+
+test('parsePatches with a single patch', () => {
+  const patch = `@@ -1,7 +1,7 @@
+ PATH
+   remote: .
+   specs:
+-    aspnet_password_hasher (0.1.0)
++    aspnet_password_hasher (1.0.0)
+`
+
+  const gemnames = parsePatches([patch])
+  expect(gemnames).toStrictEqual([
+    {name: 'aspnet_password_hasher', oldVersion: '0.1.0', newVersion: '1.0.0'}
+  ])
+})
+
+test('parsePatches with multiple patches', () => {
+  const patch1 = `@@ -1,7 +1,7 @@
+ PATH
+   remote: .
+   specs:
+-    aspnet_password_hasher (0.1.0)
++    aspnet_password_hasher (1.0.0)
+`
+  const patch2 = `@@ -11,13 +11,13 @@ GEM
+     coderay (1.1.3)
+     diff-lcs (1.4.4)
+     docile (1.4.0)
+-    parser (3.0.1.1)
++    parser (3.0.2.0)
+       ast (~> 2.4.1)
+     proc_to_ast (0.1.0)
+       coderay
+       parser
+       unparser
+-    rake (13.0.3)
++    rake (13.0.6)
+     rspec (3.10.0)
+       rspec-core (~> 3.10.0)
+       rspec-expectations (~> 3.10.0)
+`
+
+  const gemnames = parsePatches([patch1, patch2])
   expect(gemnames).toStrictEqual([
     {name: 'aspnet_password_hasher', oldVersion: '0.1.0', newVersion: '1.0.0'},
     {name: 'parser', oldVersion: '3.0.1.1', newVersion: '3.0.2.0'},

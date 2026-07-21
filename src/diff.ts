@@ -14,6 +14,10 @@ export type AddedRubyGems = {
   newVersion: string
 }
 
+export function isGemfileLockPath(filename: string): boolean {
+  return /(^|\/)Gemfile\.lock$/.test(filename)
+}
+
 function isGemfileLockDiffStart(line: string): boolean {
   return !!line.match(/^diff --git a\/.*Gemfile.lock$/)
 }
@@ -64,14 +68,7 @@ export function extractChangedRubyGemsNames(lines: Lines): RubyGemsDiff[] {
   return diffs.filter(diff => !!diff) as RubyGemsDiff[]
 }
 
-export function parseDiff(diff: string): AddedRubyGems[] {
-  const diffs: RubyGemsDiff[] = []
-  for (const lines of extractGemfileLockDiffLines(diff)) {
-    for (const gem of extractChangedRubyGemsNames(lines)) {
-      diffs.push(gem)
-    }
-  }
-
+function aggregateChanges(diffs: RubyGemsDiff[]): AddedRubyGems[] {
   const changes = new Map<string, RubyGemsChange>()
   for (const gem of diffs) {
     const change = changes.get(gem.name) || {}
@@ -94,4 +91,20 @@ export function parseDiff(diff: string): AddedRubyGems[] {
     })
   }
   return gems
+}
+
+export function parseDiff(diff: string): AddedRubyGems[] {
+  const diffs: RubyGemsDiff[] = []
+  for (const lines of extractGemfileLockDiffLines(diff)) {
+    for (const gem of extractChangedRubyGemsNames(lines)) {
+      diffs.push(gem)
+    }
+  }
+
+  return aggregateChanges(diffs)
+}
+
+export function parsePatches(patches: string[]): AddedRubyGems[] {
+  const allLines = patches.flatMap(patch => patch.split('\n')).filter(isDiff)
+  return aggregateChanges(extractChangedRubyGemsNames(allLines))
 }
