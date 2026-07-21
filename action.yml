@@ -3,9 +3,11 @@ description: Comment ChangeLog URLs of updated RubyGems
 author: kzkn
 inputs:
   githubToken:
+    description: 'GitHub token used to comment on pull requests'
     required: true
   rubygemsToken:
-    required: true
+    description: 'RubyGems API token used to fetch gem information'
+    required: false
 runs:
   using: 'node24'
   main: 'dist/index.js'
