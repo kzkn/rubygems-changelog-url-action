@@ -6,7 +6,7 @@ import * as fs from 'fs'
 import replaceComment from '@aki77/actions-replace-comment'
 import {markdownTable} from 'markdown-table'
 import {Gem, searchChangeLogUrl} from 'rubygems-changelog-url'
-import {parseDiff, AddedRubyGems} from './diff'
+import {parsePatches, isGemfileLockPath, AddedRubyGems} from './diff'
 
 async function listUpdatedRubyGems(): Promise<AddedRubyGems[]> {
   const token = core.getInput('githubToken')
@@ -17,16 +17,18 @@ async function listUpdatedRubyGems(): Promise<AddedRubyGems[]> {
     console.log('rate limit', rateLimit) // eslint-disable-line no-console
   }
 
-  const {data: pullRequest} = await octokit.rest.pulls.get({
+  const files = await octokit.paginate(octokit.rest.pulls.listFiles, {
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
     pull_number: github.context.issue.number,
-    mediaType: {
-      format: 'diff'
-    }
+    per_page: 100
   })
 
-  return parseDiff(pullRequest.toString())
+  const patches = files
+    .filter(f => isGemfileLockPath(f.filename))
+    .flatMap(f => (f.patch ? [f.patch] : []))
+
+  return parsePatches(patches)
 }
 
 function majorVersion(version: string): string {
